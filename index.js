@@ -42,7 +42,7 @@ const pathScalar = new GraphQLScalarType({
   name: "Path",
   description: "Path Custom Scalar Type",
   serialize(value) {
-    if (value.includes(" ")) {
+    if (value.match(/^[^.#$@]+[.a-zA-Z0-9*]+[^.#$@]+$/) === null) {
       throw new Error("Invalid Path");
     }
     return value;

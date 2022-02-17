@@ -1,4 +1,6 @@
-import { gql, ApolloServer } from "apollo-server";
+import { GraphQLScalarType } from "graphql";
+import pkg from "apollo-server";
+const { gql, ApolloServer, Kind } = pkg;
 
 const items = [
   {
@@ -19,10 +21,12 @@ const items = [
 ];
 
 const typeDefs = gql`
+  scalar Path
+
   type Item {
     id: ID!
     name: String!
-    path: String!
+    path: Path!
   }
 
   type Query {
@@ -34,7 +38,28 @@ const typeDefs = gql`
   }
 `;
 
+const pathScalar = new GraphQLScalarType({
+  name: "Path",
+  description: "Path Custom Scalar Type",
+  serialize(value) {
+    if (value.includes(" ")) {
+      throw new Error("Invalid Path");
+    }
+    return value;
+  },
+  parseValue(value) {
+    return value;
+  },
+  parseLiteral(ast) {
+    if (ast.kind === Kind.STRING) {
+      return ast;
+    }
+    return null;
+  },
+});
+
 const resolvers = {
+  Path: pathScalar,
   Query: {
     items: () => items,
   },
@@ -42,10 +67,6 @@ const resolvers = {
   Mutation: {
     AddItem: (root, args) => {
       const newItem = { ...args };
-
-      if (newItem.path.includes(" ")) {
-        throw new Error("Invalid Path");
-      }
 
       items.push(newItem);
 
